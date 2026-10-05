@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Breach Coach - Asesor de Seguridad</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; }
+  .container { height: 100vh; display: flex; flex-direction: column; background: #0f172a; }
+  .messages { flex: 1; overflow-y: auto; padding: 20px; gap: 12px; display: flex; flex-direction: column; }
+  .message { max-width: 85%; word-wrap: break-word; border-radius: 12px; padding: 14px 16px; line-height: 1.5; font-size: 16px; }
+  .user { background: #3b82f6; color: white; margin-left: auto; }
+  .coach { background: #1e293b; color: #e2e8f0; border-left: 3px solid #f59e0b; }
+  .input-area { padding: 16px; background: #1e293b; border-top: 1px solid #334155; display: flex; gap: 8px; }
+  input { flex: 1; padding: 12px 14px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #e2e8f0; font-size: 16px; }
+  button { padding: 12px 16px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+  button:hover { background: #2563eb; }
+  .urgente { background: #7f1d1d; color: #fecaca; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 12px; display: inline-block; margin: 4px 0; }
+  .alta { background: #92400e; color: #fcd34d; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 12px; display: inline-block; margin: 4px 0; }
+  .step { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px; margin: 8px 0; }
+  .resource { background: #0f172a; border-left: 3px solid #3b82f6; padding: 12px; margin: 8px 0; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="messages" id="messages">
+    <div class="message coach">
+      <span style="color: #f59e0b;">🛡️ Coach:</span> ¡Hola! Soy tu Asesor de Seguridad. Si descubriste que tus datos fueron robados, estoy aquí para ayudarte. Cuéntame qué pasó.
+    </div>
+  </div>
+  <div class="input-area">
+    <input type="text" id="input" placeholder="Cuéntame qué pasó..." maxlength="500">
+    <button onclick="sendMessage()">Enviar</button>
+  </div>
+</div>
+
+<script>
+const threats = {
+  fraud: {
+    title: "Fraude (GoFundMe, donaciones, estafa económica)",
+    severity: "URGENTE",
+    steps: [
+      "HOY: Reporta a GoFundMe/PayPal → trust@gofundme.com con tu ID",
+      "HOY: Solicita congelación de fondos antes de que el atacante retire",
+      "Esta semana: Denuncia a Fiscalía (088) por fraude con links y pruebas",
+      "Esta semana: Contacta PROFECO (5568-8000) si hay transacciones en tu tarjeta",
+      "Próximas semanas: Mantén registro de denuncias y capturas de pantalla"
+    ]
+  },
+  identity_theft: {
+    title: "Robo de Identidad",
+    severity: "URGENTE",
+    steps: [
+      "HOY: Reporta el perfil falso en TikTok/Instagram/Facebook como 'suplantación'",
+      "HOY: Cambia contraseñas de todas tus redes desde dispositivo seguro",
+      "Esta semana: Denuncia en Fiscalía (fiscalia.gob.mx o 088)",
+      "Esta semana: Revisa créditos en buró (asnef.org.mx) — 1 reporte gratuito/año",
+      "Próximas semanas: Activa Google Alerts con tu nombre para detectar nuevos perfiles"
+    ]
+  },
+  phishing: {
+    title: "Phishing (email/SMS falso)",
+    severity: "ALTA",
+    steps: [
+      "HOY: NO hagas click en el link — reporta como spam/phishing",
+      "HOY: Contacta directamente al banco al número de tu tarjeta (no del email)",
+      "Esta semana: Cambia contraseñas de email y banca en línea",
+      "Esta semana: Activa 2FA (autenticación de dos factores) en cuentas importantes",
+      "Próximas semanas: Monitorea tu cuenta bancaria para movimientos raros"
+    ]
+  },
+  ransomware: {
+    title: "Ransomware (tu dispositivo encriptado)",
+    severity: "URGENTE",
+    steps: [
+      "INMEDIATO: Desconecta de internet (quita WiFi/cable ethernet)",
+      "HOY: NO pagues — reporta a Fiscalía (088)",
+      "HOY: Restaura desde backup anterior en otra computadora segura",
+      "Esta semana: Descarga Malwarebytes (versión gratuita) en USB y escanea",
+      "Próximas semanas: Apunta cómo llegó el ransomware para prevenir la próxima vez"
+    ]
+  },
+  breach: {
+    title: "Tus datos en un filtrado masivo",
+    severity: "ALTA",
+    steps: [
+      "HOY: Verifica en haveibeenpwned.com si tu email está en breaches",
+      "HOY: Cambia contraseña en TODOS los sitios donde usaste la misma contraseña",
+      "Esta semana: Activa alertas de inicio de sesión en Gmail/Yahoo/Hotmail",
+      "Esta semana: Si tu CURP fue filtrado, denuncia en INAI (inai.org.mx)",
+      "Próximas semanas: Monitorea movimientos, revisa créditos, vigila intentos de acceso"
+    ]
+  }
+};
+
+const resources = {
+  "Fiscalía General": { phone: "088", url: "fiscalia.gob.mx", desc: "Delitos cibernéticos 24/7" },
+  "INAI": { phone: "800-835-4324", url: "inai.org.mx", desc: "Protección de datos personales" },
+  "PROFECO": { phone: "5568-8000", url: "profeco.gob.mx", desc: "Fraude en compras/transacciones" },
+  "CNBV": { phone: "5001-9000", url: "cnbv.gob.mx", desc: "Fraude bancario" }
+};
+
+function classifyThreat(text) {
+  const lower = text.toLowerCase();
+  if (lower.includes('video') || lower.includes('tiktok') || lower.includes('goFundMe') || lower.includes('donación')) return 'fraud';
+  if (lower.includes('tinder') || lower.includes('perfil') || lower.includes('foto') || lower.includes('clone')) return 'identity_theft';
+  if (lower.includes('email') || lower.includes('link')) return 'phishing';
+  if (lower.includes('encriptado') || lower.includes('bloqueado')) return 'ransomware';
+  if (lower.includes('filtración') || lower.includes('leak') || lower.includes('datos')) return 'breach';
+  return 'identity_theft';
+}
+
+function sendMessage() {
+  const input = document.getElementById('input');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  // Add user message
+  const messagesDiv = document.getElementById('messages');
+  const userDiv = document.createElement('div');
+  userDiv.className = 'message user';
+  userDiv.textContent = msg;
+  messagesDiv.appendChild(userDiv);
+
+  input.value = '';
+  input.focus();
+
+  // Classify threat
+  const threatType = classifyThreat(msg);
+  const threat = threats[threatType];
+
+  // Build response
+  setTimeout(() => {
+    const coachDiv = document.createElement('div');
+    coachDiv.className = 'message coach';
+    
+    let html = '<span style="color: #f59e0b;">🛡️ Coach:</span><br/><br/>';
+    html += `<strong>${threat.title}</strong><br/>`;
+    html += `<span class="${threat.severity === 'URGENTE' ? 'urgente' : 'alta'}">${threat.severity}</span><br/><br/>`;
+    
+    html += '<strong>📋 Plan de acción:</strong><br/>';
+    threat.steps.forEach(step => {
+      html += `<div class="step">${step}</div>`;
+    });
+
+    html += '<br/><strong>📞 Recursos México:</strong><br/>';
+    Object.entries(resources).forEach(([name, data]) => {
+      html += `<div class="resource"><strong>${name}</strong><br/>📱 ${data.phone}<br/>🌐 ${data.url}<br/><small>${data.desc}</small></div>`;
+    });
+
+    html += '<br/><p style="font-size: 12px; color: #94a3b8;">⚠️ <strong>Asesoramiento de IA, no legal.</strong> Para emergencias: Fiscalía 088</p>';
+
+    coachDiv.innerHTML = html;
+    messagesDiv.appendChild(coachDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }, 500);
+}
+
+document.getElementById('input').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') sendMessage();
+});
+</script>
+</body>
+</html>
